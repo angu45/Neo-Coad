@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus IDE - Advanced Web Editor</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS 4 (via CDN for simplicity in this 3-file setup, though Vite usually handles it) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <!-- Monaco Editor Loader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#0a0a0a] text-gray-200 overflow-hidden selection:bg-blue-500/30">
+    <!-- App Container -->
+    <div id="nexus-app" class="h-screen w-screen flex flex-col antialiased">
+        
+        <!-- Top Toolbar -->
+        <header class="h-12 border-b border-white/5 bg-[#0d0d0d]/80 backdrop-blur-xl flex items-center justify-between px-4 z-50">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 group cursor-pointer">
+                    <div class="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                        <i data-lucide="code-2" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <span class="font-bold text-sm tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">NEXUS IDE</span>
+                </div>
+                
+                <div class="h-4 w-px bg-white/10 hidden md:block"></div>
+                
+                <nav class="hidden md:flex items-center gap-1">
+                    <button class="px-3 py-1 text-xs hover:bg-white/5 rounded-md transition-colors">File</button>
+                    <button class="px-3 py-1 text-xs hover:bg-white/5 rounded-md transition-colors">Edit</button>
+                    <button class="px-3 py-1 text-xs hover:bg-white/5 rounded-md transition-colors">View</button>
+                    <button class="px-3 py-1 text-xs hover:bg-white/5 rounded-md transition-colors">Selection</button>
+                    <button class="px-3 py-1 text-xs hover:bg-white/5 rounded-md transition-colors">Terminal</button>
+                    <button class="px-3 py-1 text-xs hover:bg-white/5 rounded-md transition-colors">Help</button>
+                </nav>
+            </div>
+
+            <div class="flex-1 flex justify-center px-4 max-w-xl">
+                 <div class="w-full relative group">
+                    <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-blue-400">
+                        <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <input type="text" placeholder="Project Search..." class="w-full bg-white/5 border border-white/10 rounded-lg py-1.5 pl-9 pr-4 text-xs focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder:text-gray-600">
+                    <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                        <span class="text-[10px] text-gray-600 border border-white/10 rounded px-1 group-focus-within:hidden">Ctrl+P</span>
+                    </div>
+                 </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="run-btn" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all shadow-lg shadow-blue-600/20 active:scale-95">
+                    <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                    <span>Run Preview</span>
+                </button>
+                <button id="share-btn" class="p-2 hover:bg-white/5 rounded-lg transition-colors text-gray-400 hover:text-white" title="Export Project">
+                    <i data-lucide="share-2" class="w-4 h-4"></i>
+                </button>
+                <div class="h-4 w-px bg-white/10"></div>
+                <button id="settings-btn" class="p-2 hover:bg-white/5 rounded-lg transition-colors text-gray-400 hover:text-white">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border border-white/20 flex items-center justify-center text-[10px] font-bold shadow-xl overflow-hidden cursor-pointer hover:shadow-indigo-500/20 transition-all">
+                    <span id="user-initials">AI</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="flex-1 flex overflow-hidden">
+            
+            <!-- Sidebar Navigation -->
+            <aside id="main-sidebar" class="w-12 border-right border-white/5 bg-[#0d0d0d] flex flex-col items-center py-4 gap-4 z-40 transition-all">
+                <button class="p-2.5 rounded-lg text-blue-500 bg-blue-500/10 border border-blue-500/20" data-view="explorer">
+                    <i data-lucide="files" class="w-5 h-5"></i>
+                </button>
+                <button class="p-2.5 rounded-lg text-gray-500 hover:text-gray-300 transition-colors" data-view="search">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                </button>
+                <button class="p-2.5 rounded-lg text-gray-500 hover:text-gray-300 transition-colors" data-view="git">
+                    <i data-lucide="git-branch" class="w-5 h-5"></i>
+                </button>
+                <button class="p-2.5 rounded-lg text-gray-500 hover:text-gray-300 transition-colors" data-view="extensions">
+                    <i data-lucide="blocks" class="w-5 h-5"></i>
+                </button>
+                <div class="mt-auto flex flex-col gap-4">
+                    <button class="p-2.5 rounded-lg text-gray-500 hover:text-gray-300 transition-colors" data-view="account">
+                        <i data-lucide="user-circle" class="w-5 h-5"></i>
+                    </button>
+                    <button class="p-2.5 rounded-lg text-gray-500 hover:text-gray-300 transition-colors" id="theme-toggle">
+                        <i data-lucide="moon" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Activity Bar (Collapsible Panel) -->
+            <div id="activity-panel" class="w-64 border-r border-white/5 bg-[#0d0d0d] flex flex-col transition-all duration-300">
+                <div id="explorer-view" class="flex-1 flex flex-col h-full">
+                    <div class="h-10 flex items-center justify-between px-4 border-b border-white/5 uppercase tracking-widest text-[10px] font-bold text-gray-500">
+                        <span>Explorer</span>
+                        <div class="flex gap-1">
+                            <button id="new-file-btn" class="p-1 hover:bg-white/5 rounded text-gray-400 hover:text-blue-400"><i data-lucide="file-plus" class="w-3.5 h-3.5"></i></button>
+                            <button id="new-folder-btn" class="p-1 hover:bg-white/5 rounded text-gray-400 hover:text-blue-400"><i data-lucide="folder-plus" class="w-3.5 h-3.5"></i></button>
+                            <button id="explorer-refresh-btn" class="p-1 hover:bg-white/5 rounded text-gray-400"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    </div>
+                    <!-- File Tree -->
+                    <div id="file-tree" class="flex-1 overflow-y-auto py-2 px-2 custom-scrollbar">
+                        <!-- Dynamic Files Go Here -->
+                    </div>
+                </div>
+
+                <div id="search-view" class="flex-1 flex flex-col h-full hidden">
+                    <div class="h-10 flex items-center px-4 border-b border-white/5 uppercase tracking-widest text-[10px] font-bold text-gray-500">
+                        <span>Search</span>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div class="relative">
+                            <input type="text" placeholder="Search" class="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500">
+                        </div>
+                        <div class="relative">
+                            <input type="text" placeholder="Replace" class="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="git-view" class="flex-1 flex flex-col h-full hidden">
+                    <div class="h-10 flex items-center px-4 border-b border-white/5 uppercase tracking-widest text-[10px] font-bold text-gray-500">
+                        <span>Source Control</span>
+                    </div>
+                    <div class="p-4 flex flex-col items-center justify-center h-full text-center space-y-4">
+                        <i data-lucide="git-merge" class="w-8 h-8 text-gray-600"></i>
+                        <p class="text-xs text-gray-500">No source control providers registered.</p>
+                        <button class="w-full text-[10px] bg-blue-600 hover:bg-blue-500 text-white py-1.5 rounded transition-colors font-bold uppercase">Initialize Repository</button>
+                    </div>
+                </div>
+
+                <div id="extensions-view" class="flex-1 flex flex-col h-full hidden">
+                    <div class="h-10 flex items-center px-4 border-b border-white/5 uppercase tracking-widest text-[10px] font-bold text-gray-500">
+                        <span>Extensions</span>
+                    </div>
+                    <div class="p-2 space-y-2">
+                        <div class="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer transition-colors">
+                            <div class="w-8 h-8 bg-orange-500/20 rounded flex items-center justify-center text-orange-500"><i data-lucide="zap" class="w-4 h-4"></i></div>
+                            <div>
+                                <div class="text-[11px] font-bold">ESLint</div>
+                                <div class="text-[9px] text-gray-500">Linter for JavaScript</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer transition-colors">
+                            <div class="w-8 h-8 bg-blue-500/20 rounded flex items-center justify-center text-blue-500"><i data-lucide="palette" class="w-4 h-4"></i></div>
+                            <div>
+                                <div class="text-[11px] font-bold">Prettier</div>
+                                <div class="text-[9px] text-gray-500">Code Formatter</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor & Preview Container -->
+            <div class="flex-1 flex flex-col min-w-0 bg-[#0f0f0f]">
+                
+                <!-- Tab Bar -->
+                <div id="tab-bar" class="h-10 bg-[#0d0d0d] border-b border-white/5 flex items-center overflow-x-auto no-scrollbar gap-px">
+                    <!-- Dynamic Tabs Go Here -->
+                </div>
+
+                <!-- Resizable Content Area -->
+                <div id="editor-container" class="flex-1 flex overflow-hidden relative">
+                    <!-- Monaco Editor Host -->
+                    <div id="monaco-editor-host" class="flex-1 min-w-0 h-full"></div>
+                    
+                    <!-- Preview Split (Resizer) -->
+                    <div id="preview-resizer" class="w-1 hover:bg-blue-500/50 cursor-col-resize z-10 transition-colors hidden md:block"></div>
+
+                    <!-- Preview Panel -->
+                    <div id="preview-panel" class="w-0 overflow-hidden flex flex-col bg-white transition-all duration-300">
+                        <div class="h-10 bg-[#1a1a1a] border-b border-white/10 flex items-center justify-between px-4 text-xs font-medium text-gray-300">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="globe" class="w-4 h-4 text-blue-400"></i>
+                                <span>Live Preview</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-1 bg-black/30 rounded-lg p-0.5">
+                                    <button class="p-1 rounded bg-white/10 text-white" data-device="desktop"><i data-lucide="monitor" class="w-3.5 h-3.5"></i></button>
+                                    <button class="p-1 rounded text-gray-500 hover:text-white" data-device="tablet"><i data-lucide="tablet" class="w-3.5 h-3.5"></i></button>
+                                    <button class="p-1 rounded text-gray-500 hover:text-white" data-device="mobile"><i data-lucide="smartphone" class="w-3.5 h-3.5"></i></button>
+                                </div>
+                                <button id="preview-refresh" class="p-1 hover:bg-white/5 rounded"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
+                                <button id="preview-close" class="p-1 hover:bg-white/5 rounded"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                            </div>
+                        </div>
+                        <div id="preview-frame-container" class="flex-1 bg-gray-200 relative overflow-auto p-4 flex items-center justify-center">
+                            <div id="preview-device-frame" class="bg-white shadow-2xl transition-all duration-500 overflow-hidden relative" style="width: 100%; height: 100%;">
+                                <iframe id="preview-iframe" class="w-full h-full border-none bg-white"></iframe>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Console (Bottom Collapsible) -->
+                    <div id="console-panel" class="absolute bottom-0 left-0 right-0 h-40 bg-[#0d0d0d] border-t border-white/10 flex flex-col z-20 translate-y-full transition-transform duration-300">
+                        <div class="h-8 flex items-center justify-between px-4 border-b border-white/5 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                            <div class="flex gap-4">
+                                <span class="text-blue-400 border-b border-blue-400 pb-1 cursor-pointer">Terminal</span>
+                                <span class="hover:text-gray-300 cursor-pointer">Problems</span>
+                                <span class="hover:text-gray-300 cursor-pointer">Output</span>
+                                <span class="hover:text-gray-300 cursor-pointer">Debug Console</span>
+                            </div>
+                            <button id="close-console" class="p-1 hover:bg-white/5 rounded"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                        <div id="terminal-content" class="flex-1 p-3 font-mono text-[11px] overflow-y-auto text-gray-400 selection:bg-blue-500/50">
+                            <div class="flex gap-2">
+                                <span class="text-green-500">➜</span>
+                                <span class="text-blue-400">~/nexus-project</span>
+                                <span class="text-white">nexus serve --watch</span>
+                            </div>
+                            <div class="mt-1 text-gray-500">[INFO] Project compiled successfully.</div>
+                            <div class="text-gray-500">[INFO] Server running at http://localhost:3000</div>
+                            <div id="live-logs" class="mt-2 text-white"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Status Bar -->
+        <footer class="h-6 bg-blue-600 flex items-center justify-between px-3 text-[10px] font-medium text-white z-50">
+            <div class="flex items-center gap-4 h-full">
+                <button class="hover:bg-black/10 px-2 h-full flex items-center gap-1.5 transition-colors">
+                    <i data-lucide="git-branch" class="w-3 h-3"></i>
+                    <span>main*</span>
+                </button>
+                <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1"><i data-lucide="x-circle" class="w-3 h-3"></i> 0</span>
+                    <span class="flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3"></i> 0</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 h-full">
+                <span id="editor-info">Ln 1, Col 1</span>
+                <span>Spaces: 4</span>
+                <span>UTF-8</span>
+                <span class="hover:bg-black/10 px-2 h-full flex items-center gap-1 cursor-pointer transition-colors" id="lang-selector">
+                    JavaScript
+                </span>
+                <button class="hover:bg-black/10 px-2 h-full flex items-center transition-colors">
+                    <i data-lucide="bell" class="w-3 h-3"></i>
+                </button>
+            </div>
+        </footer>
+
+        <!-- Modals & Overlays -->
+        <div id="modal-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+            <!-- Settings Modal -->
+            <div id="settings-modal" class="bg-[#121212] border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden hidden scale-95 opacity-0 transition-all duration-300">
+                <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold">Preferences</h2>
+                        <p class="text-xs text-gray-500">Configure your IDE workspace</p>
+                    </div>
+                    <button class="modal-close p-2 hover:bg-white/5 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div class="flex h-[400px]">
+                    <div class="w-40 border-r border-white/5 p-4 flex flex-col gap-1">
+                        <button class="px-3 py-2 text-xs text-left rounded-lg bg-blue-500/10 text-blue-400 font-medium">Editor</button>
+                        <button class="px-3 py-2 text-xs text-left rounded-lg text-gray-500 hover:text-gray-300">Appearance</button>
+                        <button class="px-3 py-2 text-xs text-left rounded-lg text-gray-500 hover:text-gray-300">Preview</button>
+                        <button class="px-3 py-2 text-xs text-left rounded-lg text-gray-500 hover:text-gray-300">Shortcuts</button>
+                    </div>
+                    <div class="flex-1 p-6 overflow-y-auto custom-scrollbar">
+                        <div class="space-y-6">
+                            <section>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-600 mb-4">Font Settings</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] text-gray-500 uppercase font-bold">Font Size</label>
+                                        <select id="setting-font-size" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-blue-500/50">
+                                            <option value="12px">12px</option>
+                                            <option value="14px" selected>14px</option>
+                                            <option value="16px">16px</option>
+                                            <option value="18px">18px</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] text-gray-500 uppercase font-bold">Font Family</label>
+                                       <select id="setting-font-family" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-blue-500/50">
+                                            <option value="'JetBrains Mono'">JetBrains Mono</option>
+                                            <option value="'Fira Code'">Fira Code</option>
+                                            <option value="monospace">Monospace</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </section>
+                            
+                            <section>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-600 mb-4">Editor Features</h3>
+                                <div class="space-y-3">
+                                    <label class="flex items-center justify-between group cursor-pointer">
+                                        <span class="text-xs text-gray-300 group-hover:text-white transition-colors">Minimap Enabled</span>
+                                        <input type="checkbox" checked id="setting-minimap" class="w-4 h-4 accent-blue-500">
+                                    </label>
+                                    <label class="flex items-center justify-between group cursor-pointer">
+                                        <span class="text-xs text-gray-300 group-hover:text-white transition-colors">Word Wrap</span>
+                                        <input type="checkbox" id="setting-wordwrap" class="w-4 h-4 accent-blue-500">
+                                    </label>
+                                    <label class="flex items-center justify-between group cursor-pointer">
+                                        <span class="text-xs text-gray-300 group-hover:text-white transition-colors">Auto Save</span>
+                                        <input type="checkbox" checked id="setting-autosave" class="w-4 h-4 accent-blue-500">
+                                    </label>
+                                </div>
+                            </section>
+
+                            <section>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-600 mb-4">Theme</h3>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="h-12 rounded-lg border-2 border-blue-500 bg-[#0d0d0d] relative overflow-hidden cursor-pointer group">
+                                        <div class="absolute bottom-1 left-2 text-[8px] font-bold">VS DARK</div>
+                                    </div>
+                                    <div class="h-12 rounded-lg border border-white/5 bg-[#1e1e1e] relative overflow-hidden cursor-pointer group hover:border-white/20 transition-all">
+                                        <div class="absolute bottom-1 left-2 text-[8px] font-bold text-gray-500">MONOKAI</div>
+                                    </div>
+                                    <div class="h-12 rounded-lg border border-white/5 bg-gray-100 relative overflow-hidden cursor-pointer group hover:border-black/20 transition-all">
+                                        <div class="absolute bottom-1 left-2 text-[8px] font-bold text-gray-800">LIGHT</div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Mobile Tool -->
+        <div id="mobile-tools" class="fixed bottom-12 right-6 md:hidden flex flex-col gap-3 z-50">
+            <button class="w-12 h-12 rounded-full bg-blue-600 text-white shadow-xl flex items-center justify-center active:scale-95 transition-all"><i data-lucide="play" class="w-6 h-6"></i></button>
+            <button class="w-12 h-12 rounded-full bg-[#1a1a1a] border border-white/10 text-white shadow-xl flex items-center justify-center active:scale-95 transition-all"><i data-lucide="chevron-up" class="w-6 h-6"></i></button>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast-container" class="fixed top-16 right-6 z-[110] flex flex-col gap-2"></div>
+
+    </div>
+
+    <!-- Main Logic -->
+    <script src="script.js"></script>
+</body>
+</html>

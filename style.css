@@ -1,0 +1,156 @@
+/* Nexus IDE - Custom Styles */
+
+:root {
+    --sidebar-width: 3rem;
+    --activity-panel-width: 16rem;
+    --status-bar-height: 1.5rem;
+    --toolbar-height: 3rem;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* No Scrollbar for Tabs */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Glassmorphism utility */
+.glass {
+    background: rgba(13, 13, 13, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Tree Item Hover and Select */
+.tree-item {
+    @apply flex items-center gap-2 px-2 py-1 rounded cursor-pointer transition-colors text-xs select-none;
+}
+
+.tree-item:hover {
+    @apply bg-white/5;
+}
+
+.tree-item.active {
+    @apply bg-blue-500/20 text-blue-400;
+}
+
+.tree-folder-icon {
+    @apply text-yellow-500 w-3.5 h-3.5;
+}
+
+.tree-file-icon {
+    @apply text-gray-400 w-3.5 h-3.5;
+}
+
+.tree-file-icon.html { @apply text-orange-500; }
+.tree-file-icon.css { @apply text-blue-500; }
+.tree-file-icon.js { @apply text-yellow-500; }
+.tree-file-icon.json { @apply text-green-500; }
+.tree-file-icon.md { @apply text-blue-300; }
+
+/* Tabs */
+.tab {
+    @apply h-full px-4 flex items-center gap-2 text-xs font-medium text-gray-500 border-r border-white/5 bg-[#121212] cursor-pointer hover:bg-[#1a1a1a] transition-all min-w-[120px] max-w-[200px] select-none;
+}
+
+.tab.active {
+    @apply bg-[#0f0f0f] text-gray-200 border-t-2 border-t-blue-500;
+}
+
+.tab-close {
+    @apply invisible p-0.5 rounded hover:bg-white/10 text-gray-500 hover:text-white transition-all;
+}
+
+.tab:hover .tab-close {
+    @apply visible;
+}
+
+/* Animations */
+@keyframes slideInUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+#console-panel.active {
+    transform: translateY(0);
+}
+
+#activity-panel.collapsed {
+    width: 0;
+    overflow: hidden;
+}
+
+/* Preview Device Frames */
+.preview-desktop { width: 100%; height: 100%; }
+.preview-tablet { width: 768px; height: 1024px; border-radius: 32px; border: 8px solid #1a1a1a; margin: auto; }
+.preview-mobile { width: 375px; height: 667px; border-radius: 32px; border: 8px solid #1a1a1a; margin: auto; }
+
+/* Settings Modal Animation */
+.modal-enter {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* Monaco Custom Fixes */
+.monaco-editor, .monaco-editor .margin, .monaco-editor-background {
+    background-color: transparent !important;
+}
+
+/* Resizer Hover */
+#preview-resizer:hover {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Toast Notification */
+.toast {
+    @apply flex items-center gap-3 px-4 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl animate-slide-in-right transform transition-all duration-300;
+}
+
+@keyframes slide-in-right {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Tooltips */
+[title]:hover::after {
+    content: attr(title);
+    @apply fixed bg-black text-white text-[10px] px-2 py-1 rounded border border-white/10 z-[200] pointer-events-none whitespace-nowrap;
+    transform: translate(10px, 20px);
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    #activity-panel {
+        display: none;
+    }
+    #main-sidebar {
+        width: 100%;
+        height: 3rem;
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 0 0.5rem;
+    }
+}
