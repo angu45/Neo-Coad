@@ -288,20 +288,21 @@ class TabManager {
 
     render(activeName) {
         const container = document.getElementById('tab-bar');
+        if (!container) return;
         container.innerHTML = '';
         this.tabs.forEach(name => {
             const tab = document.createElement('div');
             tab.className = `tab ${name === activeName ? 'active' : ''}`;
             tab.innerHTML = `
                 <i data-lucide="file-code" class="w-3.5 h-3.5 tree-file-icon ${name.split('.').pop()}"></i>
-                <span>${name}</span>
+                <span class="truncate">${name}</span>
                 <i data-lucide="x" class="tab-close w-3 h-3"></i>
             `;
             tab.onclick = () => this.nexus.editor.openFile(name);
             tab.querySelector('.tab-close').onclick = (e) => this.removeTab(name, e);
             container.appendChild(tab);
         });
-        lucide.createIcons();
+        this.nexus.refreshIcons();
     }
 }
 
@@ -324,7 +325,7 @@ class NexusIDE {
     }
 
     initUI() {
-        lucide.createIcons();
+        this.refreshIcons();
 
         // Run Button
         document.getElementById('run-btn').onclick = () => this.preview.toggle();
@@ -486,7 +487,7 @@ class NexusIDE {
             this.editor.setTheme('vs');
             document.getElementById('theme-toggle').innerHTML = '<i data-lucide="sun" class="w-5 h-5"></i>';
         }
-        lucide.createIcons();
+        this.refreshIcons();
     }
 
     showMenu(e, type) {
@@ -534,6 +535,7 @@ class NexusIDE {
 
     renderFileTree() {
         const container = document.getElementById('file-tree');
+        if (!container) return;
         container.innerHTML = '';
         Object.keys(this.fs.files).sort().forEach(name => {
             const item = document.createElement('div');
@@ -546,21 +548,28 @@ class NexusIDE {
             item.onclick = () => this.editor.openFile(name);
             container.appendChild(item);
         });
-        lucide.createIcons();
+        this.refreshIcons();
+    }
+
+    refreshIcons() {
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
     }
 
     showNotification(msg) {
         const container = document.getElementById('toast-container');
+        if (!container) return;
         const toast = document.createElement('div');
         toast.className = 'toast';
         toast.innerHTML = `
             <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
                 <i data-lucide="info" class="w-4 h-4"></i>
             </div>
-            <div class="text-xs font-semibold">${msg}</div>
+            <div class="text-xs font-semibold text-white/90">${msg}</div>
         `;
         container.appendChild(toast);
-        lucide.createIcons();
+        this.refreshIcons();
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(100%)';
@@ -598,5 +607,7 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// Initialize the IDE
-window.nexus = new NexusIDE();
+// Initialize the IDE on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.nexus = new NexusIDE();
+});
