@@ -1,0 +1,6 @@
+{
+  "name": "NeonCode Studio",
+  "description": "A professional-grade, VS Code-inspired online IDE for HTML, CSS, and JavaScript with glassmorphism UI and real-time preview.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
